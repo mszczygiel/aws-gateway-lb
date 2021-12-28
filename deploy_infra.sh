@@ -1,6 +1,7 @@
 #!/bin/sh
-# TF_REGISTRY_CLIENT_TIMEOUT=30 terraform -chdir=terraform init
-# terraform -chdir=terraform apply -auto-approve
+(cd terraform && tfswitch)
+TF_REGISTRY_CLIENT_TIMEOUT=30 terraform -chdir=terraform init
+terraform -chdir=terraform apply -auto-approve
 
 state=$(terraform -chdir=terraform show -json -no-color)
 pub_ip_a=$(echo $state | jq -c '.values.root_module.resources[] | select(.address == "aws_instance.app_a") | .values.public_ip')

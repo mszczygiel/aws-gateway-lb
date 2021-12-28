@@ -25,8 +25,8 @@ locals {
   az = "eu-central-1a"
   geneve_port = 6081
   init_intance = <<EOF
-    yum -y update && yum -y install nc glibc
-    echo "TERM=vt100" >> /etc/environment
+yum -y update && yum -y install nc
+echo "TERM=vt100" | tee -a /etc/environment
   EOF
 }
 

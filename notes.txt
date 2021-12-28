@@ -1,0 +1,35 @@
+192.168.2.10 listens
+
+https://en.wikipedia.org/wiki/Transmission_Control_Protocol
+https://aws.amazon.com/blogs/networking-and-content-delivery/integrate-your-custom-logic-or-appliance-with-aws-gateway-load-balancer/
+
+-- outer geneve header
+[8 0 8 0] (8 0 = nie ważne | 8 0 = ethertype ipv4)
+[0 0 0 0] (0 0 0 = VNI | 0 = reserved)
+-- outer geneve options
+[1 8 1 2] (1 8 = option class (AWS) | 1 2  = nieważne)
+[54 47 198 60]   8B GWLBE ENI ID
+[166 242 138 65]
+[1 8 2 2] (1 8 option class (AWS))
+[0 0 0 0] 8B customer visible attachment ID
+[0 0 0 0]
+[1 8 3 1] (1 8 = option class (AWS))
+[137 130 221 57] 4B Flow cookie
+-- IP header
+[69 0 0 60] (60 - total length)
+[172 59 64 0]
+[254 6 76 27] 
+[192 168 1 10] (source address)
+[192 168 2 10] (destination address)
+-- TCP header
+[229 182 11 184] (11 184 = port 3000)
+[45 234 209 153] sequence number
+[0 0 0 0]  acknowledgement number
+[160 2 105 3] pierwsze 4 bity to data offset ( a tak na prawdę rozmiar headeru!) = 10 | 2 = flagi (SYN)
+[76 80 0 0] (76 80 = checksum | 0 0 = urgent pointer)
+[2 4 33 197]
+[4 2 8 10]
+[188 80 68 243]
+[0 0 0 0]
+[1 3 3 7]
+-- data!!!

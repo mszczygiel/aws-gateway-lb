@@ -19,12 +19,6 @@ func main() {
 		panic(err)
 	}
 
-	s := make([]byte, 10)
-	var arr *[10]byte = (*[10]byte)(s[0:10])
-	arr[2] = 5
-	fmt.Printf("%v", arr)
-	fmt.Printf("%v", s)
-
 	for {
 		buffer := make([]byte, 8500)
 		oob := make([]byte, 8500)

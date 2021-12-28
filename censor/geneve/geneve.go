@@ -56,10 +56,8 @@ func min(a, b int) int {
 func (packet *Packet) String() string {
 	i := 0
 	var builder strings.Builder
-	fmt.Println(len(packet.data))
 	for i < len(packet.data) {
 		size := min(4, len(packet.data)-i)
-		fmt.Println(size)
 		d := packet.data[i : i+size]
 		builder.WriteString(fmt.Sprintf("%v\n", d))
 		i += size

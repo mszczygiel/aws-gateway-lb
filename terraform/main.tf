@@ -24,6 +24,10 @@ data "aws_caller_identity" "current" {}
 locals {
   az = "eu-central-1a"
   geneve_port = 6081
+  init_intance = <<EOF
+    yum -y update && yum -y install nc glibc
+    echo "TERM=vt100" >> /etc/environment
+  EOF
 }
 
 resource "aws_key_pair" "default" {
@@ -153,6 +157,7 @@ resource "aws_instance" "app_a" {
   associate_public_ip_address = true
   subnet_id = aws_subnet.apps_a.id
   private_ip = "192.168.1.10"
+  user_data = local.init_intance
 }
 resource "aws_instance" "app_b" {
   ami           = "ami-00051469f31042765"
@@ -163,6 +168,7 @@ resource "aws_instance" "app_b" {
   associate_public_ip_address = true
   subnet_id = aws_subnet.apps_b.id
   private_ip = "192.168.2.10"
+  user_data = local.init_intance
 }
 resource "aws_instance" "appliance" {
   ami           = "ami-00051469f31042765"
@@ -173,6 +179,7 @@ resource "aws_instance" "appliance" {
   associate_public_ip_address = true
   subnet_id = aws_subnet.appliances.id
   private_ip = "192.168.20.10"
+  user_data = local.init_intance
 }
 
 resource "aws_lb" "gateway" {

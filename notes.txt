@@ -2,6 +2,7 @@
 
 https://en.wikipedia.org/wiki/Transmission_Control_Protocol
 https://aws.amazon.com/blogs/networking-and-content-delivery/integrate-your-custom-logic-or-appliance-with-aws-gateway-load-balancer/
+https://docs.aws.amazon.com/elasticloadbalancing/latest/gateway/getting-started.html
 
 -- outer geneve header
 [8 0 8 0] (8 0 = nie ważne | 8 0 = ethertype ipv4)
@@ -25,7 +26,7 @@ https://aws.amazon.com/blogs/networking-and-content-delivery/integrate-your-cust
 [229 182 11 184] (11 184 = port 3000)
 [45 234 209 153] sequence number
 [0 0 0 0]  acknowledgement number
-[160 2 105 3] pierwsze 4 bity to data offset ( a tak na prawdę rozmiar headeru!) = 10 | 2 = flagi (SYN)
+[160 2 105 3] pierwsze 4 bity to data offset ( a tak na prawdę rozmiar headeru!) = 10 | 2 = flagi (SYN)
 [76 80 0 0] (76 80 = checksum | 0 0 = urgent pointer)
 [2 4 33 197]
 [4 2 8 10]

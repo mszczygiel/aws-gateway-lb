@@ -26,7 +26,7 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		packet, _ := geneve.ParsePacket(length, buffer)
+		packet, _ := geneve.CreatePacket(length, buffer)
 
 		fmt.Println(packet.String())
 		fmt.Println()

@@ -5,41 +5,31 @@ import (
 	"strings"
 )
 
-type OuterEthernetHeader struct {
-	data *[18]byte
-}
+type TcpHeaderFlags byte
 
-type OutherIPv4Header struct {
-	data *[20]byte
-}
+const (
+	TCP_FLAG_FIN = 1 << iota
+	TCP_FLAG_SYN = 1 << iota
+	TCP_FLAG_RST = 1 << iota
+	TCP_FLAG_PSH = 1 << iota
+	TCP_FLAG_ACK = 1 << iota
+	TCP_FLAG_URG = 1 << iota
+	TCP_FLAG_ECE = 1 << iota
+	TCP_FLAG_CWR = 1 << iota
+)
 
-type OuterUDPHeader struct {
-	data *[8]byte
-}
-
-type GeneveHeader struct {
-	header  *[8]byte
-	options []byte
-}
-
-type InnerEthernetHeader struct {
-	data *[8]byte
-}
-
-type Payload struct {
-	ethertype *[2]byte
-	data      []byte
-}
-
-type FrameCheckSequence struct {
-	data *[4]byte
-}
+const (
+	OUTER_GENEVE_OPTIONS_OFFSET = 8
+	IP_HEADER_OFFSET            = 32 + OUTER_GENEVE_OPTIONS_OFFSET
+	TCP_HEADER_OFFSET           = 20 + IP_HEADER_OFFSET
+	TCP_HEADER_FLAGS_OFFSET     = 13 + TCP_HEADER_OFFSET
+)
 
 type Packet struct {
 	data []byte
 }
 
-func ParsePacket(length int, data []byte) (packet Packet, err error) {
+func CreatePacket(length int, data []byte) (packet Packet, err error) {
 	packet = Packet{
 		data: data[:length],
 	}
@@ -63,4 +53,22 @@ func (packet *Packet) String() string {
 		i += size
 	}
 	return builder.String()
+}
+
+func (packet *Packet) IpHeaderTotalLength() int {
+	// todo
+	return 0
+}
+
+func (packet *Packet) GetPayload() []byte {
+	// todo
+	return []byte{}
+}
+
+func (packet *Packet) SetPayload(payload []byte) {
+	// todo
+}
+
+func (packet *Packet) TcpHeaderFlags() TcpHeaderFlags {
+	return TcpHeaderFlags(packet.data[TCP_HEADER_FLAGS_OFFSET])
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net"
 
 	"mszczygiel.com/censor/geneve"
@@ -22,14 +23,33 @@ func main() {
 	for {
 		buffer := make([]byte, 8500)
 		oob := make([]byte, 8500)
-		length, _, _, _, err := conn.ReadMsgUDP(buffer, oob)
+		length, _, _, raddr, err := conn.ReadMsgUDP(buffer, oob)
 		if err != nil {
-			panic(err)
+			log.Panicf("failed to read UDP message %v", err)
 		}
-		packet, _ := geneve.CreatePacket(length, buffer)
+		packet, err := geneve.CreatePacket(length, buffer)
+		if err != nil {
+			log.Printf("ignoring packet due to unrecognized payload %v", err)
+			continue
+		}
 
-		fmt.Println(packet.String())
-		fmt.Println()
+		log.Printf("Got packet (from %v): %v -> %v F: %v", raddr, packet.SourceIP(), packet.DestinationIP(), packet.TcpHeaderFlags())
+
+		// if !packet.HasPayload() {
+		// todo connection caching?
+		conn, err := net.DialUDP("udp4", nil, raddr)
+		if err != nil {
+			log.Printf("failed to connect for sending a response %v", err)
+			continue
+		}
+		_, _, err = conn.WriteMsgUDP(packet.Data, nil, nil)
+		if err != nil {
+			log.Printf("failed to send response packet %v", err)
+			continue
+		}
+
+		// }
+
 	}
 
 }

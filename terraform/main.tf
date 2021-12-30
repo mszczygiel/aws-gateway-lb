@@ -25,9 +25,12 @@ locals {
   az = "eu-central-1a"
   geneve_port = 6081
   init_intance = <<EOF
-yum -y update && yum -y install nc
+#!/bin/bash
+yum -y update && yum -y install nc > logs.txt
 echo "TERM=vt100" | tee -a /etc/environment
   EOF
+  app_a_ip = "192.168.1.10"
+  app_b_ip = "192.168.2.10"
 }
 
 resource "aws_key_pair" "default" {
@@ -156,7 +159,7 @@ resource "aws_instance" "app_a" {
   availability_zone = local.az
   associate_public_ip_address = true
   subnet_id = aws_subnet.apps_a.id
-  private_ip = "192.168.1.10"
+  private_ip = local.app_a_ip
   user_data = local.init_intance
 }
 resource "aws_instance" "app_b" {
@@ -167,7 +170,7 @@ resource "aws_instance" "app_b" {
   availability_zone = local.az
   associate_public_ip_address = true
   subnet_id = aws_subnet.apps_b.id
-  private_ip = "192.168.2.10"
+  private_ip = local.app_b_ip
   user_data = local.init_intance
 }
 resource "aws_instance" "appliance" {
@@ -178,7 +181,6 @@ resource "aws_instance" "appliance" {
   availability_zone = local.az
   associate_public_ip_address = true
   subnet_id = aws_subnet.appliances.id
-  private_ip = "192.168.20.10"
   user_data = local.init_intance
 }
 

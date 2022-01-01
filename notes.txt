@@ -3,6 +3,7 @@
 https://en.wikipedia.org/wiki/Transmission_Control_Protocol
 https://aws.amazon.com/blogs/networking-and-content-delivery/integrate-your-custom-logic-or-appliance-with-aws-gateway-load-balancer/
 https://docs.aws.amazon.com/elasticloadbalancing/latest/gateway/getting-started.html
+https://docs.aws.amazon.com/elasticloadbalancing/latest/gateway/monitoring.html
 
 -- outer geneve header
 [8 0 8 0] (8 0 = nie ważne | 8 0 = ethertype ipv4)

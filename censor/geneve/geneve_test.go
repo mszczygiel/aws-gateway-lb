@@ -40,5 +40,6 @@ func TestCreatePacket(t *testing.T) {
 	assert.Equal(t, TcpHeaderFlags(2), packet.TcpHeaderFlags())
 	assert.Equal(t, []byte{192, 168, 1, 10}, packet.SourceIP())
 	assert.Equal(t, []byte{192, 168, 2, 10}, packet.DestinationIP())
+	assert.Equal(t, 60, packet.IpHeaderTotalLength())
 
 }

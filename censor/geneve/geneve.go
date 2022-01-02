@@ -40,10 +40,10 @@ func CreatePacket(length int, data []byte) (packet Packet, err error) {
 		return
 	}
 
-	if data[PROTOCOL_OFFSET] != PROTOCOL_TCP {
-		err = fmt.Errorf("not supported protocol: %v", data[PROTOCOL_OFFSET])
-		return
-	}
+	// if data[PROTOCOL_OFFSET] != PROTOCOL_TCP {
+	// 	err = fmt.Errorf("not supported protocol: %v", data[PROTOCOL_OFFSET])
+	// 	return
+	// }
 
 	tmpPacket := Packet{
 		Data: data[:length],

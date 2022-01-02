@@ -30,6 +30,12 @@ resource "aws_subnet" "censor" {
   availability_zone = local.az
 }
 
+resource "aws_subnet" "lb" {
+  vpc_id            = aws_vpc.censor.id
+  cidr_block        = "192.168.30.0/24"
+  availability_zone = local.az
+}
+
 resource "aws_route_table" "censor" {
     vpc_id = aws_vpc.censor.id
     route {
@@ -43,13 +49,18 @@ resource "aws_route_table_association" "censor" {
   route_table_id = aws_route_table.censor.id
 }
 
+resource "aws_route_table_association" "lb" {
+  subnet_id = aws_subnet.lb.id
+  route_table_id = aws_vpc.censor.default_route_table_id
+}
+
 resource "aws_security_group" "censor_allow_geneve" {
   vpc_id = aws_vpc.censor.id
   ingress {
     from_port   = local.geneve_port
     to_port     = local.geneve_port
     protocol    = "udp"
-    cidr_blocks = [aws_subnet.censor.cidr_block]
+    cidr_blocks = [aws_subnet.lb.cidr_block]
   }
 }
 
@@ -69,7 +80,7 @@ resource "aws_security_group" "censor_allow_health_check" {
     from_port   = 8080
     to_port     = 8080
     protocol    = "tcp"
-    cidr_blocks = [aws_subnet.censor.cidr_block]
+    cidr_blocks = [aws_subnet.lb.cidr_block]
   }
 }
 
@@ -99,7 +110,7 @@ resource "aws_instance" "appliance" {
 
 resource "aws_lb" "gateway" {
   load_balancer_type = "gateway"
-  subnets            = [aws_subnet.censor.id]
+  subnets            = [aws_subnet.lb.id]
 }
 
 

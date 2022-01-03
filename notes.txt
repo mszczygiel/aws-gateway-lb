@@ -6,6 +6,7 @@ https://docs.aws.amazon.com/elasticloadbalancing/latest/gateway/getting-started.
 https://docs.aws.amazon.com/elasticloadbalancing/latest/gateway/monitoring.html
 https://stackoverflow.com/questions/27218989/how-to-use-golang-to-compose-raw-tcp-packet-using-gopacket-and-send-it-via-raw
 https://pkg.go.dev/golang.org/x/net@v0.0.0-20211216030914-fe4d6282115f/ipv4
+https://gist.github.com/chrisnc/0ff3d1c20cb6687454b0
 
 Outgoing packets automatically have an IP header prepended to them
 (based on the destination address and the protocol number the socket is created with),

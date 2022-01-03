@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"os"
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
+	"golang.org/x/sys/unix"
 )
 
 func listenHealthCheck(port int) {
@@ -37,104 +37,172 @@ func swapSrcDstIPv4(layer *layers.IPv4) {
 	layer.DstIP = layer.SrcIP
 	layer.SrcIP = dst
 }
-func swapSrcDstUDP(layer *layers.UDP) {
-	dst := layer.DstPort
-	layer.DstPort = layer.SrcPort
-	layer.SrcPort = dst
-}
 
 func main() {
-	if len(os.Args) != 2 {
-		log.Fatal("specify local address")
+	// if len(os.Args) != 2 {
+	// 	log.Fatal("specify local address")
+	// }
+	_, err := net.ListenUDP("udp4", &net.UDPAddr{IP: net.ParseIP("0.0.0.0"), Port: 6081})
+	if err != nil {
+		log.Panicf("Failed to bind: %v", err)
 	}
 	go listenHealthCheck(8080)
 
-	laddr := net.ParseIP(os.Args[1])
-
+	// laddr := net.ParseIP(os.Args[1])
 	fmt.Println("Welcome to Censor")
-	conn, err := net.ListenIP("ip4:17", &net.IPAddr{IP: laddr})
+	// conn, err := net.ListenPacket("ip4:17", laddr.String())
+	fd, err := unix.Socket(unix.AF_INET, unix.SOCK_RAW, unix.IPPROTO_UDP)
 	if err != nil {
-		log.Panicf("failed to start listening on %v. Error: %v", laddr, err)
+		log.Panicf("failed to create RAW socket: %v", err)
+	}
+	err = unix.SetsockoptInt(fd, unix.IPPROTO_IP, unix.IP_HDRINCL, 1)
+	if err != nil {
+		log.Panicf("failed to set IP_HDRINCL flag: %v", err)
+	}
+	//log.Printf(conn.LocalAddr().String())
+	// if err != nil {
+	// 	log.Panicf("failed to start listening on %v. Error: %v", laddr, err)
+	// }
+
+	// err = unix.Bind(fd, &unix.SockaddrInet4{Port: 6081, Addr: [4]byte{0, 0, 0, 0}})
+	if err != nil {
+		log.Panicf("failed to bind: %v", err)
 	}
 
-	log.Printf("local addr: %v", conn.LocalAddr())
+	// go SpamUdp()
+
+	// r := ipv4.NewPacketConn(conn)
+	// r, err := ipv4.NewRawConn(conn)
+	if err != nil {
+		log.Panicf("failed to create NewRawConn: %v", err)
+	}
+
+	// log.Printf("local addr: %v", conn.LocalAddr())
 
 	for {
 		buffer := make([]byte, 8500)
-		length, err := conn.Read(buffer)
+		// length, err := r.ReadFrom(buffer)
+		// length, err := unix.Read(fd, buffer)
+		length, raddr, err := unix.Recvfrom(fd, buffer, 0)
 		if err != nil {
 			log.Panicf("failed to read UDP message %v", err)
 		}
-		if ipLayer := gopacket.NewPacket(buffer[:length], layers.LayerTypeIPv4, gopacket.Default); ipLayer != nil {
-			log.Printf("layer: %v", ipLayer)
-			packetLayers := ipLayer.Layers()
+		if packet := gopacket.NewPacket(buffer[:length], layers.LayerTypeIPv4, gopacket.Default); packet != nil {
+			// log.Printf(packet.String())
+			packetLayers := packet.Layers()
 			if len(packetLayers) < 4 {
-				log.Printf("packet has too few layers %v", ipLayer)
 				continue
 			}
 			if packetLayers[0].LayerType() != layers.LayerTypeIPv4 || packetLayers[1].LayerType() != layers.LayerTypeUDP || packetLayers[2].LayerType() != layers.LayerTypeGeneve {
-				log.Printf("packet layers are unsupported: %v", ipLayer)
 				continue
 			}
-			udp := packetLayers[1].(*layers.UDP)
-			if udp.DstPort != 6081 {
-				log.Printf("unsupported UDP destination port %v: %v", udp.DstPort, ipLayer)
-				continue
-			}
+			log.Printf(packet.String())
 			ip := packetLayers[0].(*layers.IPv4)
 			swapSrcDstIPv4(ip)
-			swapSrcDstUDP(udp)
-			geneve := packetLayers[2].(*layers.Geneve)
+			ip.Checksum = 0
 			buf := gopacket.NewSerializeBuffer()
-			opts := gopacket.SerializeOptions{ComputeChecksums: true, FixLengths: true}
-			var notModifiedLayers []gopacket.SerializableLayer
-			for _, layer := range packetLayers[2:] {
-				serLayer, ok := layer.(gopacket.SerializableLayer)
-				if !ok {
-					if !(layer.LayerType() == layers.LayerTypeGeneve) {
-						log.Printf("layer not serializable %v: %v", layer.LayerType(), layer)
-						continue
+			opts := gopacket.SerializeOptions{ComputeChecksums: false, FixLengths: true}
+			for i := len(packetLayers) - 1; i >= 1; i-- {
+				if layer, ok := packetLayers[i].(gopacket.SerializableLayer); ok {
+					err := layer.SerializeTo(buf, opts)
+					if err != nil {
+						log.Printf("failed to serialize layer: %v", err)
 					}
+					buf.PushLayer(layer.LayerType())
+				} else if layer, ok := packetLayers[i].(*layers.Geneve); ok {
+					bytes, err := buf.PrependBytes(len(layer.Contents))
+					if err != nil {
+						log.Printf("failed to prepend geneve bytes: %v", err)
+					}
+					copy(bytes, layer.Contents)
+				} else {
+					log.Printf("layer of unknown type: %v", packetLayers[i].LayerType())
 				}
-				notModifiedLayers = append(notModifiedLayers, serLayer)
 			}
-			gopacket.SerializeLayers(buf, opts, notModifiedLayers...)
-			geneveBytes, err := buf.PrependBytes(len(geneve.Contents))
-			if err != nil {
-				log.Printf("failed to prepend geneve bytes: %v", err)
-				continue
-			}
-			copy(geneveBytes, geneve.Contents)
-			buf.PushLayer(geneve.LayerType())
-			udp.SerializeTo(buf, opts)
-			buf.PushLayer(udp.LayerType())
+			// bytes, err := buf.PrependBytes(len(ip.LayerPayload()))
+			// if err != nil {
+			// 	log.Printf("Failed to prepend bytes: %v", err)
+			// }
+			// copy(bytes, ip.LayerPayload())
 			ip.SerializeTo(buf, opts)
-			buf.PushLayer(ip.LayerType())
-
 			response := buf.Bytes()
-			raddr := net.UDPAddr{IP: ip.DstIP, Port: int(udp.DstPort)}
+			err = unix.Sendto(fd, response, 0, raddr)
 			if err != nil {
-				log.Printf("cannot dial %v: %v", raddr, err)
-				continue
-			}
-			// respondTo, err := net.DialUDP("udp4", &net.UDPAddr{IP: laddr, Port: 6081}, &raddr)
-			respondTo, err := net.DialIP("ip4:17", &net.IPAddr{IP: ip.SrcIP}, &net.IPAddr{IP: ip.DstIP})
-			if err != nil {
-				log.Printf("failed to Dial respondTo: %v", err)
-				continue
-			}
-			written, err := respondTo.Write(response)
-			respondTo.Close()
-			if err != nil {
-				log.Printf("failed to write response bytes: %v. %v, %v", err, ip, udp)
-
+				log.Printf("failed to write response: %v", err)
 			} else {
-				log.Printf("written %v response bytes to %v. source bytes: %v", written, raddr, length)
+				log.Printf("written %v response bytes. Source bytes: %v", len(response), length)
 			}
-		} else {
-			log.Printf("packet not an IPv4 packet")
-			continue
 		}
+		// if ipLayer := gopacket.NewPacket(buffer[:length], layers.LayerTypeIPv4, gopacket.Default); ipLayer != nil {
+		// 	log.Printf("layer: %v", ipLayer)
+		// 	packetLayers := ipLayer.Layers()
+		// 	if len(packetLayers) < 4 {
+		// 		log.Printf("packet has too few layers %v", ipLayer)
+		// 		continue
+		// 	}
+		// 	if packetLayers[0].LayerType() != layers.LayerTypeIPv4 || packetLayers[1].LayerType() != layers.LayerTypeUDP || packetLayers[2].LayerType() != layers.LayerTypeGeneve {
+		// 		log.Printf("packet layers are unsupported: %v", ipLayer)
+		// 		continue
+		// 	}
+		// 	udp := packetLayers[1].(*layers.UDP)
+		// 	if udp.DstPort != 6081 {
+		// 		log.Printf("unsupported UDP destination port %v: %v", udp.DstPort, ipLayer)
+		// 		continue
+		// 	}
+		// 	ip := packetLayers[0].(*layers.IPv4)
+		// 	swapSrcDstIPv4(ip)
+		// 	swapSrcDstUDP(udp)
+		// 	geneve := packetLayers[2].(*layers.Geneve)
+		// 	buf := gopacket.NewSerializeBuffer()
+		// 	opts := gopacket.SerializeOptions{ComputeChecksums: true, FixLengths: true}
+		// 	var notModifiedLayers []gopacket.SerializableLayer
+		// 	for _, layer := range packetLayers[2:] {
+		// 		serLayer, ok := layer.(gopacket.SerializableLayer)
+		// 		if !ok {
+		// 			if !(layer.LayerType() == layers.LayerTypeGeneve) {
+		// 				log.Printf("layer not serializable %v: %v", layer.LayerType(), layer)
+		// 				continue
+		// 			}
+		// 		}
+		// 		notModifiedLayers = append(notModifiedLayers, serLayer)
+		// 	}
+		// 	gopacket.SerializeLayers(buf, opts, notModifiedLayers...)
+		// 	geneveBytes, err := buf.PrependBytes(len(geneve.Contents))
+		// 	if err != nil {
+		// 		log.Printf("failed to prepend geneve bytes: %v", err)
+		// 		continue
+		// 	}
+		// 	copy(geneveBytes, geneve.Contents)
+		// 	buf.PushLayer(geneve.LayerType())
+		// 	udp.SerializeTo(buf, opts)
+		// 	buf.PushLayer(udp.LayerType())
+		// 	ip.SerializeTo(buf, opts)
+		// 	buf.PushLayer(ip.LayerType())
+
+		// 	response := buf.Bytes()
+		// 	raddr := net.UDPAddr{IP: ip.DstIP, Port: int(udp.DstPort)}
+		// 	if err != nil {
+		// 		log.Printf("cannot dial %v: %v", raddr, err)
+		// 		continue
+		// 	}
+		// 	// respondTo, err := net.DialUDP("udp4", &net.UDPAddr{IP: laddr, Port: 6081}, &raddr)
+		// 	respondTo, err := net.DialIP("ip4:17", &net.IPAddr{IP: ip.SrcIP}, &net.IPAddr{IP: ip.DstIP})
+		// 	if err != nil {
+		// 		log.Printf("failed to Dial respondTo: %v", err)
+		// 		continue
+		// 	}
+		// 	written, err := respondTo.Write(response)
+		// 	respondTo.Close()
+		// 	if err != nil {
+		// 		log.Printf("failed to write response bytes: %v. %v, %v", err, ip, udp)
+
+		// 	} else {
+		// 		log.Printf("written %v response bytes to %v. source bytes: %v", written, raddr, length)
+		// 	}
+		// } else {
+		// 	log.Printf("packet not an IPv4 packet")
+		// 	continue
+		// }
 
 		// packet, err := geneve.CreatePacket(length, buffer)
 		// log.Printf("packet: %v", packet.String())

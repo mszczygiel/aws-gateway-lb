@@ -13,4 +13,4 @@ case $CMD in
     IP=$APPLIANCE_IP ;;
 esac
 
-ssh ec2-user@$IP
+ssh -o StrictHostKeyChecking=no ec2-user@$IP

@@ -19,6 +19,7 @@ func listenHealthCheck(port int) {
 	if err != nil {
 		log.Panicf("failed to start listening for health check: %v", err)
 	}
+	defer listener.Close()
 
 	for {
 		conn, err := listener.AcceptTCP()
@@ -39,17 +40,20 @@ func swapSrcDstIPv4(layer *layers.IPv4) {
 }
 
 func main() {
-	_, err := net.ListenUDP("udp4", &net.UDPAddr{IP: net.ParseIP("0.0.0.0"), Port: 6081})
+	conn, err := net.ListenUDP("udp4", &net.UDPAddr{IP: net.ParseIP("0.0.0.0"), Port: 6081})
 	if err != nil {
 		log.Panicf("Failed to bind: %v", err)
 	}
+	defer conn.Close()
 	go listenHealthCheck(8080)
 
 	fmt.Println("Welcome to Censor")
 	fd, err := unix.Socket(unix.AF_INET, unix.SOCK_RAW, unix.IPPROTO_UDP)
 	if err != nil {
-		log.Panicf("failed to create RAW socket: %v", err)
+		log.Panicf("failed to create a RAW socket: %v", err)
 	}
+	defer unix.Close(fd)
+
 	err = unix.SetsockoptInt(fd, unix.IPPROTO_IP, unix.IP_HDRINCL, 1)
 	if err != nil {
 		log.Panicf("failed to set IP_HDRINCL flag: %v", err)
@@ -67,7 +71,8 @@ func main() {
 		buffer := make([]byte, 8500)
 		length, raddr, err := unix.Recvfrom(fd, buffer, 0)
 		if err != nil {
-			log.Panicf("failed to read UDP message %v", err)
+			log.Printf("failed to read UDP message %v", err)
+			continue
 		}
 		if packet := gopacket.NewPacket(buffer[:length], layers.LayerTypeIPv4, gopacket.Default); packet != nil {
 			packetLayers := packet.Layers()
@@ -108,6 +113,8 @@ func main() {
 			} else {
 				log.Printf("written %v response bytes. Source bytes: %v", len(response), length)
 			}
+		} else {
+			log.Printf("failed to create packet from bytes: %v", buffer[:length])
 		}
 	}
 

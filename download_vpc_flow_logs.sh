@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -e
 
 APPS_DIR="logs/vpc/app"
 CENSOR_DIR="logs/vpc/censor"

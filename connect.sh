@@ -2,4 +2,4 @@
 
 source ./IPS.sh
 
-nc $APP_A_IP 3000
+nc $APP_C_IP 3000

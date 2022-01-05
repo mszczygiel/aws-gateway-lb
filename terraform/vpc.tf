@@ -20,6 +20,11 @@ resource "aws_internet_gateway" "main" {
 }
 resource "aws_route_table" "igw" {
   vpc_id = aws_vpc.main.id
+
+  route {
+    cidr_block = aws_subnet.apps_c.cidr_block
+    vpc_endpoint_id = aws_vpc_endpoint.censored_communication_public.id
+  }
 }
 
 resource "aws_route_table_association" "igw" {
@@ -41,7 +46,7 @@ resource "aws_route_table" "apps_a" {
   }
   route {
     cidr_block      = "0.0.0.0/0"
-    vpc_endpoint_id = aws_internet_gateway.main.id
+    gateway_id = aws_internet_gateway.main.id
   }
 }
 
@@ -74,6 +79,25 @@ resource "aws_route_table_association" "apps_b" {
   route_table_id = aws_route_table.apps_b.id
 }
 
+resource "aws_subnet" "apps_c" {
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = "192.168.3.0/24"
+  availability_zone = local.az
+}
+resource "aws_route_table" "apps_c" {
+  vpc_id = aws_vpc.main.id
+
+  route {
+    cidr_block      = "0.0.0.0/0"
+    vpc_endpoint_id = aws_vpc_endpoint.censored_communication_public.id
+  }
+}
+
+resource "aws_route_table_association" "apps_c" {
+  subnet_id      = aws_subnet.apps_c.id
+  route_table_id = aws_route_table.apps_c.id
+}
+
 resource "aws_subnet" "endpoint" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = "192.168.10.0/24"
@@ -87,6 +111,26 @@ resource "aws_route_table" "endpoint" {
 resource "aws_route_table_association" "endpoint" {
   subnet_id      = aws_subnet.endpoint.id
   route_table_id = aws_route_table.endpoint.id
+}
+
+resource "aws_subnet" "endpoint_public" {
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = "192.168.100.0/24"
+  availability_zone = local.az
+}
+
+resource "aws_route_table" "endpoint_public" {
+  vpc_id = aws_vpc.main.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.main.id
+  }
+}
+
+resource "aws_route_table_association" "endpoint_public" {
+  subnet_id      = aws_subnet.endpoint_public.id
+  route_table_id = aws_route_table.endpoint_public.id
 }
 
 resource "aws_subnet" "appliances" {

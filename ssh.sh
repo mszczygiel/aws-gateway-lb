@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -e
 
 source ./IPS.sh
 
@@ -9,6 +9,8 @@ case $CMD in
     IP=$APP_A_IP ;;
   "b")
     IP=$APP_B_IP ;;
+  "c")
+    IP=$APP_C_IP ;;
   "appliance")
     IP=$APPLIANCE_IP ;;
 esac

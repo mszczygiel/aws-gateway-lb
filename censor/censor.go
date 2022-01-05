@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"strings"
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
@@ -86,8 +87,21 @@ func main() {
 			ip := packetLayers[0].(*layers.IPv4)
 			swapSrcDstIPv4(ip)
 			ip.Checksum = 0
+			if insideUDP, ok := packetLayers[len(packetLayers)-2].(*layers.UDP); ok {
+
+				if insideUDP.SrcPort == 3000 || insideUDP.DstPort == 3000 {
+					if payload, ok := packetLayers[len(packetLayers)-1].(*gopacket.Payload); ok {
+						payloadStr := string(payload.Payload())
+						if strings.Contains(strings.ToLower(payloadStr), "asap") {
+							// drop ASAP messages
+							log.Printf("Dropping ASAP message")
+							continue
+						}
+					}
+				}
+			}
 			buf := gopacket.NewSerializeBuffer()
-			opts := gopacket.SerializeOptions{ComputeChecksums: false, FixLengths: true}
+			opts := gopacket.SerializeOptions{ComputeChecksums: false, FixLengths: false}
 			for i := len(packetLayers) - 1; i >= 1; i-- {
 				if layer, ok := packetLayers[i].(gopacket.SerializableLayer); ok {
 					err := layer.SerializeTo(buf, opts)

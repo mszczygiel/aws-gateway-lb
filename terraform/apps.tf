@@ -27,7 +27,7 @@ resource "aws_security_group" "apps_allow_chat_local" {
   ingress {
     from_port   = local.chat_port
     to_port     = local.chat_port
-    protocol    = "tcp"
+    protocol    = "udp"
     cidr_blocks = [aws_subnet.apps_a.cidr_block, aws_subnet.apps_b.cidr_block]
   }
 }
@@ -38,7 +38,7 @@ resource "aws_security_group" "apps_allow_chat_public" {
   ingress {
     from_port   = local.chat_port
     to_port     = local.chat_port
-    protocol    = "tcp"
+    protocol    = "udp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 }

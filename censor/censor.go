@@ -60,14 +60,6 @@ func main() {
 		log.Panicf("failed to set IP_HDRINCL flag: %v", err)
 	}
 
-	if err != nil {
-		log.Panicf("failed to bind: %v", err)
-	}
-
-	if err != nil {
-		log.Panicf("failed to create NewRawConn: %v", err)
-	}
-
 	for {
 		buffer := make([]byte, 8500)
 		length, raddr, err := unix.Recvfrom(fd, buffer, 0)

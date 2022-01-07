@@ -61,6 +61,7 @@ func main() {
 	}
 
 	for {
+		recomputeChecksum := false
 		buffer := make([]byte, 8500)
 		length, raddr, err := unix.Recvfrom(fd, buffer, 0)
 		if err != nil {
@@ -79,23 +80,34 @@ func main() {
 			ip := packetLayers[0].(*layers.IPv4)
 			swapSrcDstIPv4(ip)
 			ip.Checksum = 0
-			if insideUDP, ok := packetLayers[len(packetLayers)-2].(*layers.UDP); ok {
-
-				if insideUDP.SrcPort == CHAT_PORT || insideUDP.DstPort == CHAT_PORT {
-					if payload, ok := packetLayers[len(packetLayers)-1].(*gopacket.Payload); ok {
-						payloadStr := string(payload.Payload())
-						if strings.Contains(strings.ToLower(payloadStr), "asap") {
-							// drop ASAP messages
-							log.Printf("Dropping ASAP message")
-							continue
+			insideIPLayerIdx := len(packetLayers) - 3
+			insideUDPLayerIdx := len(packetLayers) - 2
+			if insideIP, ok := packetLayers[insideIPLayerIdx].(*layers.IPv4); ok {
+				if insideUDP, ok := packetLayers[insideUDPLayerIdx].(*layers.UDP); ok {
+					if insideUDP.SrcPort == CHAT_PORT || insideUDP.DstPort == CHAT_PORT {
+						if payload, ok := packetLayers[len(packetLayers)-1].(*gopacket.Payload); ok {
+							payloadStr := string(payload.Payload())
+							if strings.Contains(strings.ToLower(payloadStr), "asap") {
+								log.Printf("Dropping ASAP message")
+								continue
+							}
+							payloadStr = strings.ReplaceAll(payloadStr, "weakly typed", "strongly typed")
+							recomputeChecksum = true
+							insideUDP.SetNetworkLayerForChecksum(insideIP)
+							packetLayers[len(packetLayers)-1] = gopacket.Payload([]byte(payloadStr))
 						}
 					}
 				}
 			}
 			buf := gopacket.NewSerializeBuffer()
-			opts := gopacket.SerializeOptions{ComputeChecksums: false, FixLengths: false}
 			for i := len(packetLayers) - 1; i >= 0; i-- {
 				if layer, ok := packetLayers[i].(gopacket.SerializableLayer); ok {
+					var opts gopacket.SerializeOptions
+					if recomputeChecksum && (i == insideUDPLayerIdx || i == insideIPLayerIdx) {
+						opts = gopacket.SerializeOptions{ComputeChecksums: true, FixLengths: true}
+					} else {
+						opts = gopacket.SerializeOptions{FixLengths: true}
+					}
 					err := layer.SerializeTo(buf, opts)
 					if err != nil {
 						log.Printf("failed to serialize layer: %v", err)

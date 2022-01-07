@@ -1,19 +1,6 @@
 resource "aws_vpc" "main" {
   cidr_block = "192.168.0.0/16"
 }
-# resource "aws_s3_bucket" "main_flow_logs" {
-#     bucket = "mszczygiel-demo-apps-flow-logs"
-#     acl = "log-delivery-write"
-#     force_destroy = true
-# }
-
-# resource "aws_flow_log" "main" {
-#   log_destination      = aws_s3_bucket.main_flow_logs.arn
-#   log_destination_type = "s3"
-#   traffic_type         = "ALL"
-#   vpc_id               = aws_vpc.main.id
-# }
-
 
 resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id

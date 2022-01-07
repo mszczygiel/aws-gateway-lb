@@ -99,7 +99,7 @@ func main() {
 			}
 			buf := gopacket.NewSerializeBuffer()
 			opts := gopacket.SerializeOptions{ComputeChecksums: false, FixLengths: false}
-			for i := len(packetLayers) - 1; i >= 1; i-- {
+			for i := len(packetLayers) - 1; i >= 0; i-- {
 				if layer, ok := packetLayers[i].(gopacket.SerializableLayer); ok {
 					err := layer.SerializeTo(buf, opts)
 					if err != nil {
@@ -116,7 +116,6 @@ func main() {
 					log.Printf("layer of unknown type: %v", packetLayers[i].LayerType())
 				}
 			}
-			ip.SerializeTo(buf, opts)
 			response := buf.Bytes()
 			err = unix.Sendto(fd, response, 0, raddr)
 			if err != nil {

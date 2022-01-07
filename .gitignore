@@ -19,3 +19,4 @@ censor/censor
 IPS.sh
 *.tfplan
 logs
+terraform/pubkey

@@ -1,5 +1,5 @@
 resource "aws_key_pair" "default" {
-  public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCoZnn82NlaDWzzCzHT/86oofHKatrKTx3GnP3cnGgyO2KA3NH0naYlZsaUISfT3imoYNqtnKdRwNWfH3sPtCAtzLoCDoQwyL5aIjZIKdzjcEVPxHcW2B+sEIaKu30KmHTfZtT6aFL1/JXlrlGMy/c1IA0QteI+pxQOHQJf+b3d7FjrCz4SJlmh5Lseslh319r69RVQ6MuN435uJJrawywvGsuB6dzYoDMt0Y1lSUeREr3L1pHq9VjTvfMhF3FVMyPcx5zuDAQY1XgMiDvV2NVl2CTdNPq3Z9o/BDfxYDfytOL/5Rrs/QxVA9LuQAUx+6yJr2t6HBb95uWcls89aUV2Y0lTm32c7iGfvePrADP9j9tQJqvhHkfDUk7prR6w/HIUkCAUPjqvrITUP6c5sCUICNEvjSmbdo6NMtzWmt3zvp0Z2SMTIhjIpxNbvUoWfMPTEKMTgzQDCii8G5BFGQYsqxJwv6tZy+/5al48WFWOpdeF4hS7AA0HyQPJQXpKbO8="
+  public_key = file("${path.module}/pubkey")
 }
 
 data "aws_caller_identity" "current" {}

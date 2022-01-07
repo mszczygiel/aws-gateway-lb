@@ -87,8 +87,8 @@ func main() {
 					if insideUDP.SrcPort == CHAT_PORT || insideUDP.DstPort == CHAT_PORT {
 						if payload, ok := packetLayers[len(packetLayers)-1].(*gopacket.Payload); ok {
 							payloadStr := string(payload.Payload())
-							if strings.Contains(strings.ToLower(payloadStr), "asap") {
-								log.Printf("Dropping ASAP message")
+							if strings.Contains(strings.ToLower(payloadStr), "drop me") {
+								log.Printf("Dropping message")
 								continue
 							}
 							payloadStr = strings.ReplaceAll(payloadStr, "weakly typed", "strongly typed")

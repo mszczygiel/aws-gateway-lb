@@ -1,15 +1,15 @@
 # Demo of AWS Gateway Load Balancer
-This set up presents capabilities of AWS Gateway Load Balancer.
+This repository is a simple demo of AWS Gateway Load Balancer.
 
 If packet contains string "drop me" then it will be dropped,
 
-whereas string "weakly typed" get's replaced with "strongly typed"
+String "weakly typed" will be replaced with "strongly typed"
 
-other packets are forwarded without change
+Other packets are forwarded without change
 
 **Note that resources provisioned with this demo will incur some costs. Remember to destroy provisioned infrastructure.**
 ## Infrastructure
-Infrastructure is managed by Terraform (terraform directory). It consists of:
+Infrastructure is managed by Terraform (`terraform` directory). It consists of:
 - VPC (192.168.0.0/16)
 - subnets
   - 192.168.1.0/24 -> app A
@@ -36,14 +36,14 @@ Infrastructure is managed by Terraform (terraform directory). It consists of:
   - permissive egress on all instances 
 
 ## Virtual appliance
-Source code of the virtual appliance can be found in the `censor` directory. The application listens on raw packets and inspects GENEVE traffic. Packets are modified (replace "weakly typed" with "strongly typed"), dropped (if payload contains "drop me") or forwarded unmodified (in other cases)
+Source code of the virtual appliance can be found in the `censor` directory. The application captures raw packets and inspects GENEVE traffic. Packets are modified (replace "weakly typed" with "strongly typed"), dropped (if payload contains "drop me") or forwarded unmodified (in other cases)
 
 
 ## Prerequisites
 - [Terraform](https://www.terraform.io/) and [tfswitch](https://tfswitch.warrensbox.com/)
 - AWS access configured
 - [go](https://go.dev) (version at least 1.17)
-- public SSH key in under `~/.ssh/id_rsa.pub`
+- public SSH key under `~/.ssh/id_rsa.pub`
 - environment variable `TF_STATE_BUCKET` with name of the S3 bucket where terraform state will be stored
 
 ## How to run

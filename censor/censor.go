@@ -11,6 +11,11 @@ import (
 	"golang.org/x/sys/unix"
 )
 
+
+const (
+	CHAT_PORT = 3000
+)
+
 func listenHealthCheck(port int) {
 	addr := net.TCPAddr{
 		IP:   net.ParseIP("0.0.0.0"),
@@ -81,7 +86,7 @@ func main() {
 			ip.Checksum = 0
 			if insideUDP, ok := packetLayers[len(packetLayers)-2].(*layers.UDP); ok {
 
-				if insideUDP.SrcPort == 3000 || insideUDP.DstPort == 3000 {
+				if insideUDP.SrcPort == CHAT_PORT || insideUDP.DstPort == CHAT_PORT {
 					if payload, ok := packetLayers[len(packetLayers)-1].(*gopacket.Payload); ok {
 						payloadStr := string(payload.Payload())
 						if strings.Contains(strings.ToLower(payloadStr), "asap") {

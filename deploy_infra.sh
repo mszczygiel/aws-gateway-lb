@@ -10,10 +10,6 @@ pub_ip_b=$(echo $state | jq -c '.values.root_module.resources[] | select(.addres
 pub_ip_c=$(echo $state | jq -c '.values.root_module.resources[] | select(.address == "aws_instance.app_c") | .values.public_ip')
 pub_ip_appliance=$(echo $state | jq -c '.values.root_module.resources[] | select(.address == "aws_instance.appliance") | .values.public_ip')
 
-ssh -o StrictHostKeyChecking=no ec2-user@$pub_ip_a '"sudo yum -y install nc"'
-ssh -o StrictHostKeyChecking=no ec2-user@$pub_ip_b '"sudo yum -y install nc"'
-ssh -o StrictHostKeyChecking=no ec2-user@$pub_ip_c '"sudo yum -y install nc"'
-
 echo "export APP_A_IP=$pub_ip_a" > IPS.sh
 echo "export APP_B_IP=$pub_ip_b" >> IPS.sh
 echo "export APP_C_IP=$pub_ip_c" >> IPS.sh

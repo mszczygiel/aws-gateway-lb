@@ -79,7 +79,6 @@ func main() {
 			log.Print(packet.String())
 			ip := packetLayers[0].(*layers.IPv4)
 			swapSrcDstIPv4(ip)
-			ip.Checksum = 0
 			insideIPLayerIdx := len(packetLayers) - 3
 			insideUDPLayerIdx := len(packetLayers) - 2
 			if insideIP, ok := packetLayers[insideIPLayerIdx].(*layers.IPv4); ok {

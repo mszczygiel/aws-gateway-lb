@@ -46,11 +46,6 @@ func swapSrcDstIPv4(layer *layers.IPv4) {
 }
 
 func main() {
-	conn, err := net.ListenUDP("udp4", &net.UDPAddr{IP: net.ParseIP("0.0.0.0"), Port: 6081})
-	if err != nil {
-		log.Panicf("Failed to bind: %v", err)
-	}
-	defer conn.Close()
 	go listenHealthCheck(8080)
 
 	fmt.Println("Welcome to Censor")

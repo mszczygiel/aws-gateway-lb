@@ -7,7 +7,6 @@ terraform {
   }
 
   backend "s3" {
-    bucket = "mszczygiel-playground-tfstate"
     key    = "gateway-lb"
     region = "eu-central-1"
   }

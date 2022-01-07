@@ -3,7 +3,7 @@
 cp ~/.ssh/id_rsa.pub terraform/pubkey
 
 (cd terraform && tfswitch)
-TF_REGISTRY_CLIENT_TIMEOUT=60 terraform -chdir=terraform init && \
+TF_REGISTRY_CLIENT_TIMEOUT=60 terraform -chdir=terraform init --backend-config="bucket=$TF_STATE_BUCKET" && \
 terraform -chdir=terraform plan -refresh=true -out=plan.tfplan && \
 terraform -chdir=terraform apply plan.tfplan
 

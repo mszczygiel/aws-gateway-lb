@@ -53,11 +53,21 @@ resource "aws_security_group" "apps_permissive_egress" {
   }
 }
 
+resource "aws_security_group" "apps_allow_local_icmp" {
+  vpc_id = aws_vpc.main.id
+  ingress {
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = [aws_vpc.main.cidr_block]
+  }
+}
+
 resource "aws_instance" "app_a" {
   ami                         = "ami-00051469f31042765"
   instance_type               = "t2.micro"
   key_name                    = aws_key_pair.default.key_name
-  vpc_security_group_ids      = [aws_security_group.apps_allow_ssh.id, aws_security_group.apps_permissive_egress.id, aws_security_group.apps_allow_chat_local.id]
+  vpc_security_group_ids      = [aws_security_group.apps_allow_ssh.id, aws_security_group.apps_permissive_egress.id, aws_security_group.apps_allow_chat_local.id, aws_security_group.apps_allow_local_icmp.id]
   availability_zone           = local.az
   associate_public_ip_address = true
   subnet_id                   = aws_subnet.apps_a.id
@@ -68,7 +78,7 @@ resource "aws_instance" "app_b" {
   ami                         = "ami-00051469f31042765"
   instance_type               = "t2.micro"
   key_name                    = aws_key_pair.default.key_name
-  vpc_security_group_ids      = [aws_security_group.apps_allow_ssh.id, aws_security_group.apps_permissive_egress.id, aws_security_group.apps_allow_chat_local.id]
+  vpc_security_group_ids      = [aws_security_group.apps_allow_ssh.id, aws_security_group.apps_permissive_egress.id, aws_security_group.apps_allow_chat_local.id, aws_security_group.apps_allow_local_icmp.id]
   availability_zone           = local.az
   associate_public_ip_address = true
   subnet_id                   = aws_subnet.apps_b.id
@@ -79,7 +89,7 @@ resource "aws_instance" "app_c" {
   ami                         = "ami-00051469f31042765"
   instance_type               = "t2.micro"
   key_name                    = aws_key_pair.default.key_name
-  vpc_security_group_ids      = [aws_security_group.apps_allow_ssh.id, aws_security_group.apps_permissive_egress.id, aws_security_group.apps_allow_chat_public.id]
+  vpc_security_group_ids      = [aws_security_group.apps_allow_ssh.id, aws_security_group.apps_permissive_egress.id, aws_security_group.apps_allow_chat_public.id, aws_security_group.apps_allow_local_icmp.id]
   availability_zone           = local.az
   associate_public_ip_address = true
   subnet_id                   = aws_subnet.apps_c.id

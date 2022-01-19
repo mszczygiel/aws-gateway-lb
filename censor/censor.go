@@ -11,7 +11,6 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-
 const (
 	CHAT_PORT = 3000
 )
@@ -72,6 +71,15 @@ func main() {
 			packetLayers := packet.Layers()
 			if len(packetLayers) < 4 {
 				continue
+			}
+			if len(packetLayers) >= 5 {
+				if packetLayers[4].LayerType() == layers.LayerTypeICMPv4 {
+					icmp := packetLayers[4].(*layers.ICMPv4)
+					if icmp.Seq%5 != 0 {
+						log.Printf("DROP ICMP %v %v", icmp.TypeCode, icmp.Seq)
+						continue
+					}
+				}
 			}
 			if packetLayers[0].LayerType() != layers.LayerTypeIPv4 || packetLayers[1].LayerType() != layers.LayerTypeUDP || packetLayers[2].LayerType() != layers.LayerTypeGeneve {
 				continue

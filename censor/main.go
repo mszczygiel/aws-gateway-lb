@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"mszczygiel.com/censor/handler"
 	"net"
 	"strings"
 
@@ -42,6 +43,12 @@ func swapSrcDstIPv4(layer *layers.IPv4) {
 	dst := layer.DstIP
 	layer.DstIP = layer.SrcIP
 	layer.SrcIP = dst
+}
+
+var handlers = []handler.PacketHandler{
+	handler.DropUDPPacketsOnPortContainingPayload(3000, "drop me"),
+	handler.ReplacePayload("weakly typed", "strongly typed"),
+	handler.PassEveryNICMPPackets(5),
 }
 
 func main() {
@@ -106,6 +113,17 @@ func main() {
 					}
 				}
 			}
+
+			handleResult := handler.Handle(&packet, handlers)
+
+			switch handleResult {
+			case handler.DROP:
+				continue
+			case handler.MODIFIED:
+				recomputeChecksum = true
+			default:
+			}
+
 			buf := gopacket.NewSerializeBuffer()
 			for i := len(packetLayers) - 1; i >= 0; i-- {
 				if layer, ok := packetLayers[i].(gopacket.SerializableLayer); ok {

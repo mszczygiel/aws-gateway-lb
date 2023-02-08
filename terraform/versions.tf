@@ -2,16 +2,14 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 3.51"
+      version = "~> 4.0"
     }
   }
-
-  backend "s3" {
-    key    = "gateway-lb"
-    region = "eu-central-1"
+  backend "local" {
+    path = "terraform.tfstate"
   }
 
-  required_version = ">= 1.0.10"
+  required_version = ">= 1.3.7"
 }
 
 provider "aws" {

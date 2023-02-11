@@ -45,7 +45,6 @@ Source code of the virtual appliance can be found in the `censor` directory. The
 - [go](https://go.dev) (version at least 1.17)
 - `jq` must be installed
 - public SSH key under `~/.ssh/id_rsa.pub`
-- environment variable `TF_STATE_BUCKET` with name of the S3 bucket where terraform state will be stored
 
 ## How to run
 - `./deploy_infra.sh` - provisions AWS infrastructure with terraform

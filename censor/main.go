@@ -3,9 +3,10 @@ package main
 import (
 	"fmt"
 	"log"
-	"mszczygiel.com/censor/handler"
 	"net"
 	"strings"
+
+	"github.com/mszczygiel/aws-gateway-lb/censor/handler"
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"

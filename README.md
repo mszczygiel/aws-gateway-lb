@@ -36,7 +36,7 @@ Infrastructure is managed by Terraform (`terraform` directory). It consists of:
   - permissive egress on all instances 
 
 ## Virtual appliance
-Source code of the virtual appliance can be found in the `censor` directory. The application captures raw packets and inspects GENEVE traffic. Packets are modified (replace "weakly typed" with "strongly typed"), dropped (if payload contains "drop me") or forwarded unmodified (in other cases)
+Source code of the virtual appliance can be found in the `censor` directory. The application captures raw packets and inspects GENEVE traffic. Packets are modified (replace "weakly typed" with "strongly typed"), dropped (if payload contains "drop me") or forwarded unmodified (in other cases). Additionally, every 5th ICMP packet will be dropped
 
 
 ## Prerequisites

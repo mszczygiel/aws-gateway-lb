@@ -25,5 +25,4 @@ terraform/pubkey
 terraform.tfstate
 terraform/.terraform
 
-
 .envrc

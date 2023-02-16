@@ -33,16 +33,18 @@ Infrastructure is managed by Terraform (`terraform` directory). It consists of:
   - allowed UDP traffic on port 3000 on all instances (for demo purposes)
   - allowed UDP traffic on port 6081 (GENEVE) on virtual appliance
   - allowed TCP traffic on port 8080 (health check) on virtual appliance
+  - allowed ICMP in 192.168.0.0/16 subnet
   - permissive egress on all instances 
 
 ## Virtual appliance
-Source code of the virtual appliance can be found in the `censor` directory. The application captures raw packets and inspects GENEVE traffic. Packets are modified (replace "weakly typed" with "strongly typed"), dropped (if payload contains "drop me") or forwarded unmodified (in other cases)
+Source code of the virtual appliance can be found in the `censor` directory. The application captures raw packets and inspects GENEVE traffic. Packets going from/to UDP port 3000 are modified (replace "weakly typed" with "strongly typed"), dropped (if payload contains "drop me") or forwarded unmodified (in other cases). Additionally, every 5th ICMP packet will be dropped.
 
 
 ## Prerequisites
+- computer running Linux 64-bit x86 architecture
 - [Terraform](https://www.terraform.io/) and [tfswitch](https://tfswitch.warrensbox.com/)
 - AWS access configured
-- [go](https://go.dev) (version at least 1.17)
+- [go](https://go.dev) (version at least 1.20)
 - `jq` must be installed
 - public SSH key under `~/.ssh/id_rsa.pub`
 

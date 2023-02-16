@@ -1,6 +1,6 @@
 #!/bin/sh -e
 
-source ./IPS.sh
+. ./IPS.sh
 
 CMD=$1
 

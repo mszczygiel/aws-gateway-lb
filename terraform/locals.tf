@@ -8,4 +8,5 @@ yum -y update && yum -y install nc > logs.txt
 echo "TERM=vt100" >> /etc/environment
   EOF
   chat_port    = 3000
+  ami = "ami-0c0d3776ef525d5dd"
 }

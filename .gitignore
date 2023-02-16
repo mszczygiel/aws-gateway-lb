@@ -20,3 +20,10 @@ IPS.sh
 *.tfplan
 logs
 terraform/pubkey
+
+# terraform
+terraform.tfstate
+terraform/.terraform
+
+
+.envrc

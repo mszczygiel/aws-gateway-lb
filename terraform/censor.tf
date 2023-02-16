@@ -41,7 +41,7 @@ resource "aws_security_group" "censor_permissive_egress" {
 
 
 resource "aws_instance" "appliance" {
-  ami                         = "ami-00051469f31042765"
+  ami                         = local.ami
   instance_type               = "t2.micro"
   key_name                    = aws_key_pair.default.key_name
   vpc_security_group_ids      = [aws_security_group.censor_allow_ssh.id, aws_security_group.censor_allow_geneve.id, aws_security_group.censor_permissive_egress.id, aws_security_group.censor_allow_health_check.id]

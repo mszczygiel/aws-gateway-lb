@@ -1,6 +1,6 @@
 #!/bin/sh -e
 
-source ./IPS.sh
+. ./IPS.sh
 
 (cd censor && CGO_ENABLED=0 go build)
 

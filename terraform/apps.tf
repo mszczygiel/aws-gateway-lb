@@ -64,7 +64,7 @@ resource "aws_security_group" "apps_allow_local_icmp" {
 }
 
 resource "aws_instance" "app_a" {
-  ami                         = "ami-00051469f31042765"
+  ami                         = local.ami
   instance_type               = "t2.micro"
   key_name                    = aws_key_pair.default.key_name
   vpc_security_group_ids      = [aws_security_group.apps_allow_ssh.id, aws_security_group.apps_permissive_egress.id, aws_security_group.apps_allow_chat_local.id, aws_security_group.apps_allow_local_icmp.id]
@@ -75,7 +75,7 @@ resource "aws_instance" "app_a" {
 }
 
 resource "aws_instance" "app_b" {
-  ami                         = "ami-00051469f31042765"
+  ami                         = local.ami
   instance_type               = "t2.micro"
   key_name                    = aws_key_pair.default.key_name
   vpc_security_group_ids      = [aws_security_group.apps_allow_ssh.id, aws_security_group.apps_permissive_egress.id, aws_security_group.apps_allow_chat_local.id, aws_security_group.apps_allow_local_icmp.id]
@@ -86,7 +86,7 @@ resource "aws_instance" "app_b" {
 }
 
 resource "aws_instance" "app_c" {
-  ami                         = "ami-00051469f31042765"
+  ami                         = local.ami
   instance_type               = "t2.micro"
   key_name                    = aws_key_pair.default.key_name
   vpc_security_group_ids      = [aws_security_group.apps_allow_ssh.id, aws_security_group.apps_permissive_egress.id, aws_security_group.apps_allow_chat_public.id, aws_security_group.apps_allow_local_icmp.id]

@@ -12,6 +12,8 @@ import (
 
 type PayloadModifyFun func([]byte) []byte
 
+const genevePort = 6081
+
 type Packet struct {
 	modified     bool
 	packet       gopacket.Packet
@@ -34,12 +36,21 @@ func NewPacket(data []byte) (*Packet, error) {
 		return nil, errors.New("unexpected layers")
 	}
 
+	udp := packetLayers[1].(*layers.UDP)
+	if udp.DstPort != genevePort {
+		return nil, errors.New("not Geneve packet")
+	}
+
 	packet := &Packet{
 		packet:       p,
 		packetLayers: p.Layers(),
 	}
 
 	return packet, nil
+}
+
+func (p Packet) String() string {
+	return p.packet.String()
 }
 
 func (p *Packet) ModifyUDP(f PayloadModifyFun) error {

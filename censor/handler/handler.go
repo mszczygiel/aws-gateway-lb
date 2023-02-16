@@ -52,12 +52,12 @@ func (h *Handler) run(ctx context.Context) {
 	defer unix.Close(h.fd)
 	defer h.wg.Done()
 
-	buffer := make([]byte, 8500)
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		default:
+			buffer := make([]byte, 8500)
 			length, raddr, err := unix.Recvfrom(h.fd, buffer, 0)
 			if err != nil {
 				log.Printf("failed to read UDP message %v", err)
@@ -68,6 +68,7 @@ func (h *Handler) run(ctx context.Context) {
 				log.Printf("Failed to create a packet: %s", err)
 				continue
 			}
+			log.Print(packet.String())
 			packet.SwapSrcDstIPv4()
 
 			// skip every 5th ICMP packet
@@ -99,8 +100,6 @@ func (h *Handler) run(ctx context.Context) {
 			err = unix.Sendto(h.fd, response, 0, raddr)
 			if err != nil {
 				log.Printf("failed to write response: %v", err)
-			} else {
-				log.Printf("written %v response bytes. Source bytes: %v", len(response), length)
 			}
 		}
 	}

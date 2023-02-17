@@ -16,7 +16,6 @@ const chatPort = 3000
 type Handler struct {
 	fd int
 	mu sync.Mutex
-	wg sync.WaitGroup
 }
 
 func New() *Handler {
@@ -34,6 +33,7 @@ func (h *Handler) Start(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to create a RAW socket: %w", err)
 	}
+	defer unix.Close(fd)
 
 	err = unix.SetsockoptInt(fd, unix.IPPROTO_IP, unix.IP_HDRINCL, 1)
 	if err != nil {
@@ -41,21 +41,15 @@ func (h *Handler) Start(ctx context.Context) error {
 	}
 
 	h.fd = fd
-	h.wg.Add(1)
 
-	go h.run(ctx)
-
-	return nil
+	return h.run(ctx)
 }
 
-func (h *Handler) run(ctx context.Context) {
-	defer unix.Close(h.fd)
-	defer h.wg.Done()
-
+func (h *Handler) run(ctx context.Context) error {
 	for {
 		select {
 		case <-ctx.Done():
-			return
+			return ctx.Err()
 		default:
 			buffer := make([]byte, 8500)
 			length, raddr, err := unix.Recvfrom(h.fd, buffer, 0)
@@ -103,10 +97,6 @@ func (h *Handler) run(ctx context.Context) {
 			}
 		}
 	}
-}
-
-func (h *Handler) Wait() {
-	h.wg.Wait()
 }
 
 func replaceWeaklyTyped(b []byte) []byte {

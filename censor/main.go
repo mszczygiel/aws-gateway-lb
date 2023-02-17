@@ -7,6 +7,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"sync"
 
 	"github.com/mszczygiel/aws-gateway-lb/censor/handler"
 )
@@ -57,11 +58,16 @@ func main() {
 	I also replace every "weakly typed" with "strongly typed"`)
 
 	h := handler.New()
-	err := h.Start(ctx)
-	if err != nil {
-		log.Panicf("failed to start the handler: %v", err)
-	}
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func(ctx context.Context) {
+		err := h.Start(ctx)
+		if err != nil {
+			log.Printf("Handler stopped: %s", err)
+		}
+		wg.Done()
+	}(ctx)
 
-	h.Wait()
+	wg.Wait()
 	log.Printf("DONE")
 }

@@ -57,11 +57,10 @@ func main() {
 	I drop every 5th ICMP packet, UDP packets containing "drop me" in the payload.
 	I also replace every "weakly typed" with "strongly typed"`)
 
-	h := handler.New()
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func(ctx context.Context) {
-		err := h.Start(ctx)
+		err := handler.Start(ctx)
 		if err != nil {
 			log.Printf("Handler stopped: %s", err)
 		}

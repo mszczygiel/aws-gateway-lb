@@ -2,33 +2,16 @@ package handler
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"strings"
-	"sync"
 
 	"golang.org/x/sys/unix"
 )
 
 const chatPort = 3000
 
-type Handler struct {
-	fd int
-	mu sync.Mutex
-}
-
-func New() *Handler {
-	return &Handler{}
-}
-
-func (h *Handler) Start(ctx context.Context) error {
-	h.mu.Lock()
-	defer h.mu.Unlock()
-	if h.fd != 0 {
-		return errors.New("already started")
-	}
-
+func Start(ctx context.Context) error {
 	fd, err := unix.Socket(unix.AF_INET, unix.SOCK_RAW, unix.IPPROTO_UDP)
 	if err != nil {
 		return fmt.Errorf("failed to create a RAW socket: %w", err)
@@ -40,19 +23,17 @@ func (h *Handler) Start(ctx context.Context) error {
 		return fmt.Errorf("failed to set IP_HDRINCL flag: %w", err)
 	}
 
-	h.fd = fd
-
-	return h.run(ctx)
+	return run(ctx, fd)
 }
 
-func (h *Handler) run(ctx context.Context) error {
+func run(ctx context.Context, fd int) error {
 	for {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
 		default:
 			buffer := make([]byte, 8500)
-			length, raddr, err := unix.Recvfrom(h.fd, buffer, 0)
+			length, raddr, err := unix.Recvfrom(fd, buffer, 0)
 			if err != nil {
 				log.Printf("failed to read UDP message %v", err)
 				continue
@@ -91,7 +72,7 @@ func (h *Handler) run(ctx context.Context) error {
 				log.Printf("failed to serialize packet: %s", err)
 				continue
 			}
-			err = unix.Sendto(h.fd, response, 0, raddr)
+			err = unix.Sendto(fd, response, 0, raddr)
 			if err != nil {
 				log.Printf("failed to write response: %v", err)
 			}
